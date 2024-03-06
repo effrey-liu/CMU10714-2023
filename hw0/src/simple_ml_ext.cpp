@@ -5,6 +5,18 @@
 
 namespace py = pybind11;
 
+void matmul(const float *X, const float *Y, float *Z, size_t m, size_t n, size_t k)
+{
+    for (size_t i = 0; i < m; i++) {
+        for (size_t t = 0; t < k; t++) {
+            Z[i * k + t] = 0;
+            for (size_t j = 0; j < n; j++) {
+                Z[i * k + t] += X[i * n + j] * Y[j * k + t];
+            }
+        }
+    }
+}
+
 void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
 								  float *theta, size_t m, size_t n, size_t k,
 								  float lr, size_t batch)
@@ -32,6 +44,48 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      */
 
     /// BEGIN YOUR CODE
+    int iters = (m + batch - 1) / batch;
+    for (int iter = 0; iter < iters; iter++) {
+        const float *new_x = &X[iter * batch * n];
+        float *Z = new float[batch * k];
+        matmul(new_x, theta, Z, batch, n, k);
+        // float *cross_entropy_loss = new float(batch * k);
+        for (size_t i = 0; i < batch * k; i++) Z[i] = exp(Z[i]); 
+        for (size_t i = 0; i < batch; i++) {
+            float sum = 0;
+            for (size_t j = 0; j < k; j++) {
+                // sum += exp(Z[i * k + j]);       // wrong！！！ 误差过大，z[i]的指数需要提前计算
+                sum += Z[i * k + j];
+            }
+            for (size_t j = 0; j < k; j++) {
+                Z[i * k + j] = Z[i * k + j] / sum;
+            }
+        }
+        for (size_t i = 0; i < batch; i++) {
+            Z[i * k + y[iter * batch + i]] -= 1;
+        }
+        // for (int i = 0; i < batch; i++) {
+        //     for (int j = 0; j < k; j++) {
+        //         Z[i * m + j] /= batch;
+        //     }
+        // }
+        float *grad = new float[n * k];
+        float *new_x_T = new float[batch * n];
+        for (size_t i = 0; i < batch; i++) {
+            for (size_t j = 0; j < n; j++) {
+                new_x_T[j * batch + i] = new_x[i * n + j];
+            }
+        }
+        matmul(new_x_T, Z, grad, n, batch, k);
+
+        for (size_t i = 0; i < n * k; i++) {
+            theta[i] -= lr / batch * grad[i];
+        }
+        delete[] Z;
+        delete[] new_x_T;
+        delete[] grad;
+    }
+    
     
     /// END YOUR CODE
 }
