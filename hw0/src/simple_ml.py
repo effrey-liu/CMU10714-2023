@@ -157,7 +157,7 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
         y_batch = y[iter * batch : (iter + 1) * batch]              # (50, )
         Z_1 = np.matmul(x_batch, W1)    # (50, hidden_dim = 10)
         Relu_Z1 = np.maximum(Z_1, 0)    # (50, hidden_dim = 10)
-        Relu_mask = Z_1 > 0             # Relu求导
+        Relu_mask = Z_1 > 0             # Relu Derivative
         Z_2 = np.matmul(Relu_Z1, W2)    # (50, num_classes = 3)
         
         cross_entropy_loss = np.exp(Z_2) / np.sum(np.exp(Z_2), axis=1, keepdims=True)

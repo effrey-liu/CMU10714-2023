@@ -5,11 +5,6 @@
 
 namespace py = pybind11;
 
-float* matmul(const flost *X, const float *Y)
-{
-    return null;
-}
-
 void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
 								  float *theta, size_t m, size_t n, size_t k,
 								  float lr, size_t batch)
