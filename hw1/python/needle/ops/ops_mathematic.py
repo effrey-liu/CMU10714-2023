@@ -273,7 +273,10 @@ class Summation(TensorOp):      # 和Broadcast_to类似，但summation当中需�
         if self.axes is None:       # 说明summation的结果是矩阵里所有值的和
             axes = list(range(len(input_shape)))
         else:                       # 说明规定了在哪些维度上求和
-            axes = self.axes
+            if isinstance(self.axes, int):
+                axes = [self.axes]
+            else:
+                axes = self.axes
         for i in range(len(axes)):
             expand_dims[axes[i]] = 1
         out_grad = reshape(out_grad, expand_dims)   # 先把缺少的维度恢复

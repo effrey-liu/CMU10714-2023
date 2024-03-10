@@ -33,7 +33,7 @@ def parse_mnist(image_filesname, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR SOLUTION
-    with gzip.open(image_filename, 'rb') as f:
+    with gzip.open(image_filesname, 'rb') as f:
         image = f.read()
         X = np.frombuffer(image, dtype=np.uint8, offset=16).astype(np.float32)
         X = X / 255
@@ -67,8 +67,15 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    predication = np.exp(Z) / np.sum(np.exp(Z), axis=1, keepdims=True)
-    return np.mean(-np.log(predication[np.indices(y.shape)[0], y]))
+    """
+    # predication = np.exp(Z) / np.sum(np.exp(Z), axis=1, keepdims=True)
+    # return np.mean(-np.log(predication[np.indices(y.shape)[0], y]))
+    # 这里不再是自己生成y_one_hot, 而是运用另外一个公式: lecture2 - softmax regression P12, P13
+    """
+    batch_size = Z.shape[0]
+    nomorlization = ndl.log(ndl.summation(ndl.exp(Z), axes = 1))
+    loss = ndl.summation(nomorlization - ndl.summation(y_one_hot * Z, axes = 1))
+    return loss / batch_size
     ### END YOUR SOLUTION
 
 
@@ -100,24 +107,30 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
     num_examples = X.shape[0]
     iter_num = num_examples // batch
     for iter in range(iter_num):
-        x_batch = X[iter * batch : (iter + 1) * batch, :]           # (50, 5)
-        y_batch = y[iter * batch : (iter + 1) * batch]              # (50, )
-        Z_1 = np.matmul(x_batch, W1)    # (50, hidden_dim = 10)
-        Relu_Z1 = np.maximum(Z_1, 0)    # (50, hidden_dim = 10)
-        Relu_mask = Z_1 > 0             # Relu Derivative
-        Z_2 = np.matmul(Relu_Z1, W2)    # (50, num_classes = 3)
+        #  AttributeError: 'numpy.ndarray' object has no attribute 'requires_grad'
+        x_batch = X[iter * batch : (iter + 1) * batch, :]
+        y_batch = y[iter * batch : (iter + 1) * batch]
         
-        cross_entropy_loss = np.exp(Z_2) / np.sum(np.exp(Z_2), axis=1, keepdims=True)
-        cross_entropy_loss[np.indices(y_batch.shape)[0], y_batch] -= 1
-        cross_entropy_loss /= batch     # (50, 3)
+        x_batch = ndl.Tensor(x_batch, dtype = "float32")
         
-        tmp_w1 = np.matmul(cross_entropy_loss, W2.T) * Relu_mask    # (50, 10) = (50, 50) * (50, 10) = (50, 3) * (3, 10) * (, 10)
-        delta_loss_1 = np.matmul(x_batch.T, tmp_w1)     # (5, 10) = (5, 50) * (50, 10)
-
-        delta_loss_2 = np.matmul(Relu_Z1.T, cross_entropy_loss) # (10, 3) = (10, ) * (, 3)
+        Z_1 = ndl.matmul(x_batch, W1)
+        Relu_Z1 = ndl.relu(Z_1)
+        Z_2 = ndl.matmul(Relu_Z1, W2)
         
-        W1 -= lr * delta_loss_1         # (5, 10)
-        W2 -= lr * delta_loss_2         # (10, 3)
+        e_y = np.zeros((batch, W2.shape[1]))
+        e_y[range(len(y_batch)), y_batch] = 1
+        
+        e_y = ndl.Tensor(e_y, dtype = "float32")
+        
+        cross_entropy_loss = softmax_loss(Z_2, e_y)
+        
+        cross_entropy_loss.backward()
+        
+        # W1 -= lr * W1.grad
+        # W2 -= lr * W2.grad
+        W1 = ndl.Tensor(W1.realize_cached_data() - lr * W1.grad.realize_cached_data())
+        W2 = ndl.Tensor(W2.realize_cached_data() - lr * W2.grad.realize_cached_data())
+    return (W1, W2)
     ### END YOUR SOLUTION
 
 
