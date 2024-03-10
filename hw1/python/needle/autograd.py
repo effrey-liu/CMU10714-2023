@@ -380,7 +380,17 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for node_i in reverse_topo_order:
+        adjoint = node_to_output_grads_list[node_i]
+        node_i.grad = sum(adjoint)
+        if node_i.op is None:
+            continue
+        adjoint_ks2i = node_i.op.gradient_as_tuple(node_i.grad, node_i)
+        # node_i.op.gradient_as_tuple返回值是tuple, 对应当前计算节点可能对用多个输出
+        for node_k, adjoint_k2i in zip(node_i.inputs, adjoint_ks2i):
+            # python当中字典的key需要提前设置，不等价于c++当中的map
+            node_to_output_grads_list.setdefault(node_k, list())
+            node_to_output_grads_list[node_k].append(adjoint_k2i)
     ### END YOUR SOLUTION
 
 
@@ -393,14 +403,25 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    visited = []
+    topo_order = []
+    # result = []
+    # for node in node_list:
+    topo_sort_dfs(node_list[-1], visited, topo_order)
+    # result.append(topo_order)
+    # return result
+    return topo_order
     ### END YOUR SOLUTION
 
 
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    for input in node.inputs:
+        topo_sort_dfs(input, visited, topo_order)
+    if node not in visited:
+        visited.append(node)
+        topo_order.append(node)
     ### END YOUR SOLUTION
 
 
