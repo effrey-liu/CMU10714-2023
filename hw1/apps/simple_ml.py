@@ -33,7 +33,20 @@ def parse_mnist(image_filesname, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    with gzip.open(image_filename, 'rb') as f:
+        image = f.read()
+        X = np.frombuffer(image, dtype=np.uint8, offset=16).astype(np.float32)
+        X = X / 255
+        # print(type(X))
+        X = np.reshape(X, (-1, 784))
+
+    
+    with gzip.open(label_filename, "rb") as f:
+        label = f.read()
+        y = np.frombuffer(label, dtype=np.uint8, offset=8).astype(np.uint8)
+        # print(type(y))
+        
+    return X, y
     ### END YOUR SOLUTION
 
 
@@ -54,7 +67,8 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    predication = np.exp(Z) / np.sum(np.exp(Z), axis=1, keepdims=True)
+    return np.mean(-np.log(predication[np.indices(y.shape)[0], y]))
     ### END YOUR SOLUTION
 
 
@@ -83,7 +97,27 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
     """
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    num_examples = X.shape[0]
+    iter_num = num_examples // batch
+    for iter in range(iter_num):
+        x_batch = X[iter * batch : (iter + 1) * batch, :]           # (50, 5)
+        y_batch = y[iter * batch : (iter + 1) * batch]              # (50, )
+        Z_1 = np.matmul(x_batch, W1)    # (50, hidden_dim = 10)
+        Relu_Z1 = np.maximum(Z_1, 0)    # (50, hidden_dim = 10)
+        Relu_mask = Z_1 > 0             # Relu Derivative
+        Z_2 = np.matmul(Relu_Z1, W2)    # (50, num_classes = 3)
+        
+        cross_entropy_loss = np.exp(Z_2) / np.sum(np.exp(Z_2), axis=1, keepdims=True)
+        cross_entropy_loss[np.indices(y_batch.shape)[0], y_batch] -= 1
+        cross_entropy_loss /= batch     # (50, 3)
+        
+        tmp_w1 = np.matmul(cross_entropy_loss, W2.T) * Relu_mask    # (50, 10) = (50, 50) * (50, 10) = (50, 3) * (3, 10) * (, 10)
+        delta_loss_1 = np.matmul(x_batch.T, tmp_w1)     # (5, 10) = (5, 50) * (50, 10)
+
+        delta_loss_2 = np.matmul(Relu_Z1.T, cross_entropy_loss) # (10, 3) = (10, ) * (, 3)
+        
+        W1 -= lr * delta_loss_1         # (5, 10)
+        W2 -= lr * delta_loss_2         # (10, 3)
     ### END YOUR SOLUTION
 
 

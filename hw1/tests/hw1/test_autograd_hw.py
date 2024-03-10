@@ -520,6 +520,19 @@ def test_transpose_backward():
     gradient_check(ndl.transpose, ndl.Tensor(np.random.randn(3, 5, 4)), axes=(1, 2))
     gradient_check(ndl.transpose, ndl.Tensor(np.random.randn(3, 5, 4)), axes=(0, 1))
 
+# add for relu_backward test
+def test_relu_backward():
+    gradient_check(ndl.relu, ndl.Tensor(np.random.randn(3, 5, 4)))
+    gradient_check(ndl.relu, ndl.Tensor(np.random.randn(3, 4, 5)))
+
+# add for exp_backward test    
+def test_exp_backward():
+    gradient_check(ndl.exp, ndl.Tensor(np.random.randn(3, 5, 4)))
+    gradient_check(ndl.exp, ndl.Tensor(np.random.randn(3, 4, 5)))
+    
+# add for matmul_backward test    
+def test_matmul_backward():
+    gradient_check(ndl.matmul, ndl.Tensor(np.random.randn(3, 5, 4)), ndl.Tensor(np.random.randn(3, 4, 6)))
 
 def test_broadcast_to_backward():
     gradient_check(ndl.broadcast_to, ndl.Tensor(np.random.randn(3, 1)), shape=(3, 3))
