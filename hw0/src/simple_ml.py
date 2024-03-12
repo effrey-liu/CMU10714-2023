@@ -143,6 +143,9 @@ def softmax_regression_epoch(X, y, theta, lr = 0.1, batch=100):
         delta_loss = np.matmul(x_batch.T, cross_entropy_loss)
         # theta = theta - lr * delta_loss     # Wrong!!!!
         theta -= lr * delta_loss            # Correct???
+    """
+    
+    """
 
     ### END YOUR CODE
 
