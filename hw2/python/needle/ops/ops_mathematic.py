@@ -267,7 +267,6 @@ class Summation(TensorOp):      # 和Broadcast_to类似，但summation当中需�
         ### BEGIN YOUR SOLUTION
         input, = node.inputs
         input_shape = input.shape
-        output_shape = out_grad.shape
         
         expand_dims = list(input_shape)    # 需要扩展到什么维度
         if self.axes is None:       # 说明summation的结果是矩阵里所有值的和
@@ -291,21 +290,29 @@ def summation(a, axes=None):
 class MatMul(TensorOp):
     def compute(self, a, b):
         ### BEGIN YOUR SOLUTION
+        # print(type(a), a.shape)
+        # print(type(b), b.shape)
         return array_api.matmul(a, b)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         lhs, rhs = node.inputs
-        dlhs = matmul(out_grad, transpose(rhs))
-        drhs = matmul(transpose(lhs), out_grad)
+        # dlhs = matmul(out_grad, transpose(rhs))
+        # drhs = matmul(transpose(lhs), out_grad)
         
-        if dlhs.shape != lhs.shape:
-            dlhs = summation(dlhs, tuple(range(len(dlhs.shape) - len(lhs.shape))))
-        if drhs.shape != rhs.shape:
-            drhs = summation(drhs, tuple(range(len(drhs.shape) - len(rhs.shape))))
+        # if dlhs.shape != lhs.shape:
+        #     dlhs = summation(dlhs, tuple(range(len(dlhs.shape) - len(lhs.shape))))
+        # if drhs.shape != rhs.shape:
+        #     drhs = summation(drhs, tuple(range(len(drhs.shape) - len(rhs.shape))))
         
-        return dlhs, drhs
+        # return dlhs, drhs
+        lgrad, rgrad = matmul(out_grad, rhs.transpose()), matmul(lhs.transpose(), out_grad)
+        if len(lhs.shape) < len(lgrad.shape):
+            lgrad = lgrad.sum(tuple([i for i in range(len(lgrad.shape) - len(lhs.shape))]))
+        if len(rhs.shape) < len(rgrad.shape):
+            rgrad = rgrad.sum(tuple([i for i in range(len(rgrad.shape) - len(rhs.shape))]))
+        return lgrad, rgrad
         ### END YOUR SOLUTION
 
 

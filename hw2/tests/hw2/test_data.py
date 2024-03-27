@@ -10690,7 +10690,13 @@ def test_mnist_dataset():
         "data/train-images-idx3-ubyte.gz", "data/train-labels-idx1-ubyte.gz"
     )
     assert len(mnist_train_dataset) == 60000
-
+    # for idx in [1, 42, 1000, 2000, 3000, 4000, 5000, 5005]:
+    #     print(type(mnist_train_dataset[idx][0]), mnist_train_dataset[idx][0].shape)
+    #     print(np.linalg.norm(mnist_train_dataset[idx][0]))
+    # for idx in [1, 42, 1000, 2000, 3000, 4000, 5000, 5005]:
+    #     # print(type(mnist_train_dataset[idx]), mnist_train_dataset[idx].shape)
+    #     print(type(mnist_train_dataset[idx][1]), mnist_train_dataset[idx][1].shape)
+    #     print(np.linalg.norm(mnist_train_dataset[idx][1]))
     sample_norms = np.array(
         [
             np.linalg.norm(mnist_train_dataset[idx][0])
