@@ -275,7 +275,7 @@ __global__ void ScalarPowKernel(const scalar_t* a, scalar_t val, scalar_t* out, 
   if (gid < size) out[gid] = pow(a[gid], val);
 }
 
-void ScalarPow(const CudaArray& a, scalar_t val, CudaArray* out) {
+void ScalarPower(const CudaArray& a, scalar_t val, CudaArray* out) {
   /**
    * Add together a CUDA array and a scalar value.
    */

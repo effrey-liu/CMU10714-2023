@@ -160,7 +160,7 @@ void ScalarDiv(const AlignedArray& a, scalar_t val, AlignedArray* out) {
   }
 }
 
-void ScalarPow(const AlignedArray& a, scalar_t val, AlignedArray* out) {
+void ScalarPower(const AlignedArray& a, scalar_t val, AlignedArray* out) {
   /**
    * Set entries in out to be the sum of corresponding entry in a plus the scalar val.
    */

@@ -307,11 +307,12 @@ class NDArray:
         assert(len(self._shape) == len(new_shape))
         for x, y in zip(self._shape, new_shape):
             assert(x == y or x == 1)
+        
         new_strides = list(self._strides)
         for i in range(len(self._shape)):
             if self._shape[i] != new_shape[i]:
                 new_strides[i] = 0
-        return NDArray.make(new_shape, new_strides, self._device, self._handle)
+        return NDArray.make(new_shape, tuple(new_strides), self._device, self._handle)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -378,7 +379,15 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        # raise NotImplementedError()
+        new_shape = [(sl.stop - sl.start + sl.step - 1) // sl.step for sl in idxs]
+        tmp = [sl.start * st for sl, st in zip(idxs, self._strides)]
+        total = 0
+        for num in tmp:
+            total += num
+        # offset = sum()
+        offset = total
+        new_strides = tuple([st * sl.step for st, sl in zip(self._strides, idxs)])
+        return NDArray.make(new_shape, new_strides, self._device, self._handle, offset)
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):

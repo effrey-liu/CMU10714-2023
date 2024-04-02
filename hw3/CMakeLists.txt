@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(needle C CXX)
 if(POLICY CMP0146)
   cmake_policy(SET CMP0146 OLD)
