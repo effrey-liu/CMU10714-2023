@@ -82,7 +82,7 @@ __device__ size_t helper_func(size_t index, CudaVec shape, CudaVec strides, size
   size_t loops[MAX_VEC_SIZE];
   size_t cur_size, pre_size = 1;
 
-  for (size_t i = shape.size - 1; i >= 0; i--) {
+  for (int i = shape.size - 1; i >= 0; i--) {
     cur_size = pre_size * shape.data[i];
     loops[i] = index % cur_size / pre_size;
     pre_size = cur_size;
@@ -170,7 +170,7 @@ void EwiseSetitem(const CudaArray& a, CudaArray* out, std::vector<int32_t> shape
    */
   /// BEGIN SOLUTION
   CudaDims dim = CudaOneDim(out->size);
-  EwiseSetitemKernel<<<dim.grid, dim.block>>>(a.ptr, out->ptr, out->size, VecToCuda(shape),
+  EwiseSetitemKernel<<<dim.grid, dim.block>>>(a.ptr, out->ptr, a.size, VecToCuda(shape),
                                          VecToCuda(strides), offset);
   /// END SOLUTION
 }
@@ -328,7 +328,7 @@ void ScalarPower(const CudaArray& a, scalar_t val, CudaArray* out) {
 
 __global__ void EwiseMaximumKernel(const scalar_t* a, const scalar_t* b, scalar_t* out, size_t size) {
   size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
-  if (gid < size) out[gid] = maximum(a[gid], b[gid]);
+  if (gid < size) out[gid] = max(a[gid], b[gid]);
 }
 
 void EwiseMaximum(const CudaArray& a, const CudaArray& b, CudaArray* out) {
@@ -341,7 +341,7 @@ void EwiseMaximum(const CudaArray& a, const CudaArray& b, CudaArray* out) {
 
 __global__ void ScalarMaximumKernel(const scalar_t* a, scalar_t val, scalar_t* out, size_t size) {
   size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
-  if (gid < size) out[gid] = maximum(a[gid], val);
+  if (gid < size) out[gid] = max(a[gid], val);
 }
 
 void ScalarMaximum(const CudaArray& a, scalar_t val, CudaArray* out) {
@@ -498,8 +498,8 @@ void Matmul(const CudaArray& a, const CudaArray& b, CudaArray* out, uint32_t M, 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-__global__ ReduceMaxKernel(const scalar_t* a, scalar_t* out, size_t reduce_size, size_t size) {
-  size_t i = blockIdx.x * blockDim + threadIdx.x;
+__global__ void ReduceMaxKernel(const scalar_t* a, scalar_t* out, size_t reduce_size, size_t size) {
+  size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < size) {
     size_t offset = i * reduce_size;
     scalar_t reduce_max = a[offset];
@@ -526,8 +526,8 @@ void ReduceMax(const CudaArray& a, CudaArray* out, size_t reduce_size) {
   /// END SOLUTION
 }
 
-__global__ ReduceSumKernel(const scalar_t* a, scalar_t* out, size_t reduce_size, size_t size) {
-  size_t i = blockIdx.x * blockDim + threadIdx.x;
+__global__ void ReduceSumKernel(const scalar_t* a, scalar_t* out, size_t reduce_size, size_t size) {
+  size_t i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < size) {
     size_t offset = i * reduce_size;
     scalar_t reduce_sum = 0;
@@ -550,7 +550,7 @@ void ReduceSum(const CudaArray& a, CudaArray* out, size_t reduce_size) {
    */
   /// BEGIN SOLUTION
   CudaDims dim = CudaOneDim(out->size);
-  ReduceMaxKernel<<<dim.grid, dim.block>>>(a.ptr, out->ptr, reduce_size, out->size);
+  ReduceSumKernel<<<dim.grid, dim.block>>>(a.ptr, out->ptr, reduce_size, out->size);
   /// END SOLUTION
 }
 
