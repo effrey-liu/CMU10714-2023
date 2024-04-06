@@ -26,6 +26,8 @@ def backward_check(f, *args, **kwargs):
             args[i].realize_cached_data().flat[j] += eps
             numerical_grad[i].flat[j] = (f1 - f2) / (2 * eps)
     backward_grad = out.op.gradient_as_tuple(ndl.Tensor(c, device=args[0].device), out)
+    # print("backward_grad: ", backward_grad[0].numpy())
+    # print("numerical_grad: ", numerical_grad[0])
     error = sum(
         np.linalg.norm(backward_grad[i].numpy() - numerical_grad[i])
         for i in range(len(args))

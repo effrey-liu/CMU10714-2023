@@ -37,7 +37,20 @@ def parse_mnist(image_filesname, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    with gzip.open(image_filesname, 'rb') as f:
+        image = f.read()
+        X = np.frombuffer(image, dtype=np.uint8, offset=16).astype(np.float32)
+        X = X / 255
+        # print(type(X))
+        X = np.reshape(X, (-1, 784))
+
+    
+    with gzip.open(label_filename, "rb") as f:
+        label = f.read()
+        y = np.frombuffer(label, dtype=np.uint8, offset=8).astype(np.uint8)
+        # print(type(y))
+        
+    return X, y
     ### END YOUR SOLUTION
 
 
@@ -58,7 +71,10 @@ def softmax_loss(Z, y_one_hot):
         Average softmax loss over the sample. (ndl.Tensor[np.float32])
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    batch_size = Z.shape[0]
+    nomorlization = ndl.log(ndl.summation(ndl.exp(Z), axes = 1))
+    loss = ndl.summation(nomorlization - ndl.summation(y_one_hot * Z, axes = 1))
+    return loss / batch_size
     ### END YOUR SOLUTION
 
 
@@ -87,7 +103,33 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
     """
 
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    num_examples = X.shape[0]
+    iter_num = num_examples // batch
+    for iter in range(iter_num):
+        #  AttributeError: 'numpy.ndarray' object has no attribute 'requires_grad'
+        x_batch = X[iter * batch : (iter + 1) * batch, :]
+        y_batch = y[iter * batch : (iter + 1) * batch]
+        
+        x_batch = ndl.Tensor(x_batch, dtype = "float32")
+        
+        Z_1 = ndl.matmul(x_batch, W1)
+        Relu_Z1 = ndl.relu(Z_1)
+        Z_2 = ndl.matmul(Relu_Z1, W2)
+        
+        e_y = np.zeros((batch, W2.shape[1]))
+        e_y[range(len(y_batch)), y_batch] = 1
+        
+        e_y = ndl.Tensor(e_y, dtype = "float32")
+        
+        cross_entropy_loss = softmax_loss(Z_2, e_y)
+        
+        cross_entropy_loss.backward()
+        
+        # W1 -= lr * W1.grad
+        # W2 -= lr * W2.grad
+        W1 = ndl.Tensor(W1.realize_cached_data() - lr * W1.grad.realize_cached_data())
+        W2 = ndl.Tensor(W2.realize_cached_data() - lr * W2.grad.realize_cached_data())
+    return (W1, W2)
     ### END YOUR SOLUTION
 
 ### CIFAR-10 training ###
@@ -110,7 +152,31 @@ def epoch_general_cifar10(dataloader, model, loss_fn=nn.SoftmaxLoss(), opt=None)
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    correct, total_loss = 0, 0
+    if opt is None:
+        model.eval()
+        for X, y in dataloader:
+            X = ndl.Tensor(X, device=device)
+            y = ndl.Tensor(y, device=device)
+            out = model(X)
+            loss = loss_fn()(out, y)
+            correct += np.sum(np.argmax(out.numpy(), axis=1) == y.numpy())
+            total_loss += loss.data.numpy() * y.shape[0]
+    else:
+        model.train()
+        for X, y in dataloader:
+            opt.reset_grad()
+            X = ndl.Tensor(X, device=device)
+            y = ndl.Tensor(y, device=device)
+            out = model(X)
+            loss = loss_fn()(out, y)
+            loss.backward()
+            opt.step()
+            correct += np.sum(np.argmax(out.numpy(), axis=1) == y.numpy())
+            total_loss += loss.numpy() * y.shape[0]
+
+    sample_nums = len(dataloader.dataset)
+    return correct / sample_nums, total_loss / sample_nums
     ### END YOUR SOLUTION
 
 
@@ -134,7 +200,10 @@ def train_cifar10(model, dataloader, n_epochs=1, optimizer=ndl.optim.Adam,
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    opt = optimizer(model.parameters(), lr=lr, weight_decay=weight_decay)
+    for epoch in range(n_epochs):
+        avg_acc, avg_loss = epoch_general_cifar10(dataloader, model, loss_fn=loss_fn, opt=opt)
+        print(f"Epoch: {epoch}, Acc: {avg_acc}, Loss: {avg_loss}")
     ### END YOUR SOLUTION
 
 
@@ -153,7 +222,8 @@ def evaluate_cifar10(model, dataloader, loss_fn=nn.SoftmaxLoss):
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    avg_acc, avg_loss = epoch_general_cifar10(dataloader, model, loss_fn=loss_fn)
+    print(f"Evaluation Acc: {avg_acc}, Evaluation Loss: {avg_loss}")
     ### END YOUR SOLUTION
 
 

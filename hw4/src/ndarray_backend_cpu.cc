@@ -233,7 +233,7 @@ void ScalarPower(const AlignedArray& a, scalar_t val, AlignedArray* out) {
    * Set entries in out to be the result of corresponding entry in a div the scalar val.
    */
   for (size_t i = 0; i < a.size; i++) {
-    out->ptr[i] = pow(a.ptr[i], val);
+    out->ptr[i] = std::pow(a.ptr[i], val);
   }
 }
 
@@ -296,7 +296,7 @@ void EwiseLog(const AlignedArray& a, AlignedArray* out) {
    * Set entries in out to be the Log of correspondings entires in a.
    */
   for (size_t i = 0; i < a.size; i++) {
-    out->ptr[i] = log(a.ptr[i]);
+    out->ptr[i] = std::log(a.ptr[i]);
   }
 }
 
@@ -305,7 +305,7 @@ void EwiseExp(const AlignedArray& a, AlignedArray* out) {
    * Set entries in out to be the Exp of correspondings entires in a.
    */
   for (size_t i = 0; i < a.size; i++) {
-    out->ptr[i] = exp(a.ptr[i]);
+    out->ptr[i] = std::exp(a.ptr[i]);
   }
 }
 
@@ -314,7 +314,7 @@ void EwiseTanh(const AlignedArray& a, AlignedArray* out) {
    * Set entries in out to be the Tanh of correspondings entires in a.
    */
   for (size_t i = 0; i < a.size; i++) {
-    out->ptr[i] = tanh(a.ptr[i]);
+    out->ptr[i] = std::tanh(a.ptr[i]);
   }
 }
 
