@@ -207,19 +207,19 @@ class BroadcastTo(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        input, = node.inputs
-        input_shape = input.shape
-        output_shape = self.shape
-        
-        expand_dim = len(output_shape) - len(input_shape)
-        reduced_dims = []
-        for i in range(expand_dim):     # 先将多余的维度进行reduce，也就是sum
-            out_grad = summation(out_grad, axes=(0))
-        for i in range(len(input_shape)):   # 然后检查是否在某一维度上进行了广播
-            if input_shape[i] != output_shape[i + expand_dim]:
-                # 该维度上大小不一致说明进行了广播，记录下来，将该维度上进行sum
-                reduced_dims.append(i)
-        return reshape(summation(out_grad, axes=tuple(reduced_dims)), input_shape)
+        origin_shape = node.inputs[0].shape
+        if origin_shape == self.shape:
+            return out_grad
+
+        shrink_dims = [i for i in range(len(self.shape))]
+        # iterate from the back because it could be len(ori_shape) < len(self.shape)
+        for i, (ori, cur) in enumerate(zip(reversed(origin_shape), reversed(self.shape))):
+            if ori == cur:
+                shrink_dims[len(self.shape) - i - 1] = -1
+        shrink_dims = tuple(filter(lambda x: x >= 0, shrink_dims))
+        assert len(shrink_dims) > 0
+
+        return out_grad.sum(shrink_dims).reshape(origin_shape)
         ### END YOUR SOLUTION
 
 
