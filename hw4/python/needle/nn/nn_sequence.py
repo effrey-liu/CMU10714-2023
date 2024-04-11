@@ -283,16 +283,6 @@ class LSTM(Module):
             of shape (4*hidden_size,).
         """
         ### BEGIN YOUR SOLUTION
-        # self.device = device
-        # self.dtype = dtype
-        
-        # self.input_size = input_size
-        # self.hidden_size = hidden_size
-        # self.num_layers = num_layers 
-        # self.bias = bias
-        
-        # self.lstm_cells = [LSTMCell(input_size, hidden_size, bias=bias, device=device, dtype=dtype)] + \
-        #                  [LSTMCell(hidden_size, hidden_size, bias=bias,  device=device, dtype=dtype) for _ in range(num_layers-1)]
         self.device = device
         self.dtype = dtype
         self.hidden_size = hidden_size
