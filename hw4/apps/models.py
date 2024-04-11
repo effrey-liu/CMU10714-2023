@@ -83,16 +83,25 @@ class LanguageModel(nn.Module):
         """
         super(LanguageModel, self).__init__()
         ### BEGIN YOUR SOLUTION
-        self.embedding_size = embedding_size
+        # self.embedding_size = embedding_size
+        # self.output_size = output_size
+        # self.hidden_size = hidden_size
+        # self.embedding = nn.Embedding(output_size, embedding_size, device=device, dtype=dtype)
+        # if seq_model == 'rnn':
+        #     self.seq_model = nn.RNN(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
+        # elif seq_model == 'lstm':
+        #     self.seq_model = nn.LSTM(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
+        # else:
+        #     raise ValueError('only have rnn and lstm models')
+        # self.linear = nn.Linear(hidden_size, output_size, device=device, dtype=dtype)
+        assert seq_model in ["rnn", "lstm"], "Unsupported sequence model. Must be rnn or lstm."
         self.output_size = output_size
         self.hidden_size = hidden_size
-        self.embedding = nn.Embedding(output_size, embedding_size, device=device, dtype=dtype)
-        if seq_model == 'rnn':
-            self.seq_model = nn.RNN(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
-        elif seq_model == 'lstm':
-            self.seq_model = nn.LSTM(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
+        self.embed = nn.Embedding(output_size, embedding_size, device=device, dtype=dtype)
+        if seq_model == "rnn":
+            self.seq_model = nn.RNN(embedding_size, hidden_size, num_layers=num_layers, device=device, dtype=dtype)
         else:
-            raise ValueError('only have rnn and lstm models')
+            self.seq_model = nn.LSTM(embedding_size, hidden_size, num_layers=num_layers, device=device, dtype=dtype)
         self.linear = nn.Linear(hidden_size, output_size, device=device, dtype=dtype)
         ### END YOUR SOLUTION
 
@@ -110,12 +119,17 @@ class LanguageModel(nn.Module):
             else h is tuple of (h0, c0), each of shape (num_layers, bs, hidden_size)
         """
         ### BEGIN YOUR SOLUTION
+        # seq_len, bs = x.shape
+        # x_embedding = self.embedding(x)
+        # out, h = self.seq_model(x_embedding, h)
+        # out = out.reshape((seq_len * bs, self.hidden_size))
+        # out = self.linear(out)
+        # return out, h
         seq_len, bs = x.shape
-        x_embedding = self.embedding(x)
-        out, h = self.seq_model(x_embedding, h)
-        out = out.reshape((seq_len * bs, self.hidden_size))
-        out = self.linear(out)
-        return out, h
+        x = self.embed(x)
+        x, h = self.seq_model(x, h)
+        x = self.linear(x.reshape((seq_len * bs, self.hidden_size)))
+        return x, h
         ### END YOUR SOLUTION
 
 

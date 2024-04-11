@@ -359,7 +359,16 @@ class Embedding(Module):
         self.device = device
         self.dtype = dtype
 
-        self.weight = Parameter(init.rand(num_embeddings, embedding_dim, low=0, high=1, device=device, dtype=dtype, requires_grad=True))
+        # self.weight = Parameter(init.rand(num_embeddings, embedding_dim, low=0, high=1, device=device, dtype=dtype, requires_grad=True))
+        self.weight = Parameter(init.randn(
+            num_embeddings,
+            embedding_dim,
+            mean=0,
+            std=1,
+            device=device, 
+            dtype=dtype,
+            requires_grad=True,
+        ))
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:
@@ -374,7 +383,7 @@ class Embedding(Module):
         """
         ### BEGIN YOUR SOLUTION
         seq_len, bs = x.shape
-        x_one_hot = init.one_hot(self.num_embeddings, x, device=self.device, dtype=self.dtype)
+        x_one_hot = init.one_hot(self.num_embeddings, x, device=x.device, dtype=x.dtype)
         out = x_one_hot.reshape((seq_len * bs, self.num_embeddings)) @ self.weight
         return out.reshape((seq_len, bs, self.embedding_dim))
         ### END YOUR SOLUTION
