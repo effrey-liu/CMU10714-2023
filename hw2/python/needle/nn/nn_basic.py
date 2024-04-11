@@ -112,9 +112,6 @@ class Flatten(Module):
         for x in dim:
             size *= x
         return X.reshape((batch, size))
-        # import functools
-        # size = functools.reduce(lambda x, y: x * y, X.shape[1:])
-        # return X.reshape((batch, size))
         ### END YOUR SOLUTION
 
 
@@ -165,8 +162,8 @@ class BatchNorm1d(Module):
             batch = x.shape[0]
             batch_mean = (x.sum((0,))) / batch
             batch_var = ((x - batch_mean.broadcast_to(x.shape)) ** 2).sum((0, )) / batch
-            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * batch_mean
-            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * batch_var
+            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * batch_mean.data
+            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * batch_var.data
             # norm = (x - self.running_mean.broadcast_to(x.shape)) / ((self.running_var.broadcast_to(x.shape) + self.eps) ** 0.5) # wrong!!!
             norm = (x - batch_mean.broadcast_to(x.shape)) / ((batch_var.broadcast_to(x.shape) + self.eps) ** 0.5)               # correct
             return self.weight.broadcast_to(x.shape) * norm + self.bias.broadcast_to(x.shape)
