@@ -43,7 +43,8 @@ class LogSumExp(TensorOp):
         grad_sum_exp_z = out_grad / sum_exp_z
         expand_shape = list(z.shape)
         axes = range(len(expand_shape)) if self.axes is None else self.axes
-        
+        if isinstance(axes, Number):
+            axes=(axes,)
         for axis in axes:
             expand_shape[axis] = 1
         grad_exp_z = grad_sum_exp_z.reshape(expand_shape).broadcast_to(z.shape)

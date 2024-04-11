@@ -135,8 +135,10 @@ class Sequential(Module):
 class SoftmaxLoss(Module):
     def forward(self, logits: Tensor, y: Tensor):
         ### BEGIN YOUR SOLUTION
-        one_hot_y = init.one_hot(logits.shape[1], y, device=y.device, dtype=y.dtype)
-        return ops.summation(ops.logsumexp(logits, (1,)) / logits.shape[0]) - ops.summation(one_hot_y * logits / logits.shape[0])
+        log_sum = ops.logsumexp(logits, axes=1)
+        y_one_hot = init.one_hot(logits.shape[1], y, device=y.device, dtype=y.dtype)
+        z_y = ops.summation(logits * y_one_hot, axes=1)
+        return ops.summation(log_sum - z_y) / logits.shape[0]
         ### END YOUR SOLUTION
 
 
@@ -147,8 +149,8 @@ class BatchNorm1d(Module):
         self.eps = eps
         self.momentum = momentum
         ### BEGIN YOUR SOLUTION
-        self.weight = Parameter(init.ones(self.dim, requires_grad=False, device=device))
-        self.bias = Parameter(init.zeros(self.dim, requires_grad=False, device=device))
+        self.weight = Parameter(init.ones(self.dim, requires_grad=True, device=device))
+        self.bias = Parameter(init.zeros(self.dim, requires_grad=True, device=device))
         self.running_mean = init.zeros(self.dim, device=device)
         self.running_var = init.ones(self.dim, device=device)
         ### END YOUR SOLUTION
@@ -161,8 +163,8 @@ class BatchNorm1d(Module):
             batch_mean_vec = batch_mean.reshape((1, x.shape[1]))
             batch_var = ((x - batch_mean_vec.broadcast_to(x.shape)) ** 2).sum((0, )) / batch
             batch_var_vec = batch_var.reshape((1, x.shape[1]))
-            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * batch_mean
-            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * batch_var
+            self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * batch_mean.data
+            self.running_var = (1 - self.momentum) * self.running_var + self.momentum * batch_var.data
             # norm = (x - self.running_mean.broadcast_to(x.shape)) / ((self.running_var.broadcast_to(x.shape) + self.eps) ** 0.5) # wrong!!!
             norm = (x - batch_mean_vec.broadcast_to(x.shape)) / ((batch_var_vec.broadcast_to(x.shape) + self.eps) ** 0.5)               # correct
             return self.weight.reshape((1, x.shape[1])).broadcast_to(x.shape) * norm + self.bias.reshape((1, x.shape[1])).broadcast_to(x.shape)
@@ -189,8 +191,8 @@ class LayerNorm1d(Module):
         self.dim = dim
         self.eps = eps
         ### BEGIN YOUR SOLUTION
-        self.weight = Parameter(init.ones(self.dim, requires_grad=False, device=device))
-        self.bias = Parameter(init.zeros(self.dim, requires_grad=False, device=device))
+        self.weight = Parameter(init.ones(self.dim, requires_grad=True, device=device))
+        self.bias = Parameter(init.zeros(self.dim, requires_grad=True, device=device))
         ### END YOUR SOLUTION
 
     def forward(self, x: Tensor) -> Tensor:

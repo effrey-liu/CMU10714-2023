@@ -405,9 +405,11 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    visited = []
+    visited = set() # 空list也可以，但是在topo_sort_dfs会进行visited查找，list的查找效率不如set
     topo_order = []
-    topo_sort_dfs(node_list[-1], visited, topo_order)
+    for node in node_list:
+        topo_sort_dfs(node, visited, topo_order)
+    # topo_sort_dfs(node_list[-1], visited, topo_order)
     return topo_order
     ### END YOUR SOLUTION
 
@@ -415,11 +417,13 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
 def topo_sort_dfs(node, visited, topo_order):
     """Post-order DFS"""
     ### BEGIN YOUR SOLUTION
+    if node in visited:
+        return
     for input in node.inputs:
         topo_sort_dfs(input, visited, topo_order)
-    if node not in visited:
-        visited.append(node)
-        topo_order.append(node)
+    
+    visited.add(node)
+    topo_order.append(node)
     ### END YOUR SOLUTION
 
 
