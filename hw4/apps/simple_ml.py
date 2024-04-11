@@ -252,46 +252,39 @@ def epoch_general_ptb(data, model, seq_len=40, loss_fn=nn.SoftmaxLoss(), opt=Non
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    losses = []
-    corrects = []
-    dataset_size = 0
-    train = opt is not None
-    if train:
+    if opt is not None:
         model.train()
     else:
         model.eval()
     
+    losses = []
+    accs = []
     nbatch, batch_size = data.shape
-    
-    hidden = None
-    for i in range(0, nbatch - 1, seq_len):
-        x, y = ndl.data.get_batch(data, i, seq_len, device=device, dtype=dtype)
+    h = None
+    for i in range(0, data.shape[0] - 1, seq_len):
+        X, y = ndl.data.get_batch(data, i, seq_len, device=device, dtype=dtype)
 
-        batch_size = y.shape[0]
-        dataset_size += batch_size
-        y_pred, hidden = model(x, hidden)
-        # detach the hidden state to avoid blowing up computational graph
-        # between training on different sequences
-        if isinstance(hidden, tuple):
-            h, c = hidden
-            hidden = (h.detach(), c.detach())
-        else:
-            hidden = hidden.detach()
-        
-        loss = loss_fn()(y_pred, y)
-        
-        if train:
+        # out is of shape (seq_len * batch_size, output_size)
+        out, h = model(X, h)
+        loss = loss_fn()(out, y)
+        if opt is not None:
             opt.reset_grad()
             loss.backward()
+            # if clip is not None:
+                # ndl.nn.utils.clip_grad_norm(model.parameters(), clip)
             opt.step()
+        
+        # detach hidden state to avoid backpropagating through entire history
+        if isinstance(h, tuple):
+            h = tuple([h_i.detach() for h_i in h])
+        else:
+            h = h.detach()
 
-        losses.append(loss.numpy() * batch_size)
-        correct = np.sum(y_pred.numpy().argmax(axis = 1) == y.numpy())
-        corrects.append(correct)
+        losses.append(loss.numpy())
+        accs.append((out.numpy().argmax(axis=1) == y.numpy()).sum() / y.shape[0])
 
-    avg_acc = np.sum(np.array(corrects)) / dataset_size
-    avg_loss = np.sum(np.array(losses)) / dataset_size
-    return avg_acc, avg_loss
+        del X, y, out, loss
+    return np.mean(accs), np.mean(losses)
     ### END YOUR SOLUTION
 
 
@@ -318,12 +311,12 @@ def train_ptb(model, data, seq_len=40, n_epochs=1, optimizer=ndl.optim.SGD,
     """
     np.random.seed(4)
     ### BEGIN YOUR SOLUTION
-    opt = optimizer(model.parameters(), lr = lr, weight_decay = weight_decay)
-
-    for _ in range(n_epochs):
-        avg_acc, avg_loss = epoch_general_ptb(data, model, seq_len=seq_len, loss_fn=loss_fn, opt=opt, device=device, dtype=dtype)
+    opt = optimizer(model.parameters(), lr=lr, weight_decay=weight_decay)
+    avg_acc, avg_loss = 0, 0
+    for epoch in range(n_epochs):
+        avg_acc, avg_loss = epoch_general_ptb(data, model, seq_len=seq_len, loss_fn=loss_fn, opt=opt, clip=clip, device=device, dtype=dtype)
+        print(f"Epoch: {epoch}, Acc: {avg_acc}, Loss: {avg_loss}")
     return avg_acc, avg_loss
-    # return avg_acc, avg_loss
     ### END YOUR SOLUTION
 
 def evaluate_ptb(model, data, seq_len=40, loss_fn=nn.SoftmaxLoss,

@@ -165,19 +165,6 @@ class LSTMCell(Module):
         """
         super().__init__()
         ### BEGIN YOUR SOLUTION
-        # self.device = device
-        # self.dtype = dtype
-        # self.bias = bias
-        # self.hidden_size = hidden_size
-        # bound = np.sqrt(1 / hidden_size)
-        # self.W_ih = Parameter(init.rand(input_size, 4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype, requires_grad=True))
-        # self.W_hh = Parameter(init.rand(hidden_size, 4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype, requires_grad=True))
-        # if bias:
-        #     self.bias_ih = Parameter(init.rand(4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype, requires_grad=True))
-        #     self.bias_hh = Parameter(init.rand(4*hidden_size, low=-bound, high=bound, device=device, dtype=dtype, requires_grad=True))
-        # else:
-        #     self.bias_ih = None
-        #     self.bias_hh = None
         self.device = device
         self.dtype = dtype
         self.bias = bias
@@ -213,29 +200,6 @@ class LSTMCell(Module):
             element in the batch.
         """
         ### BEGIN YOUR SOLUTION
-        # batch_size, _ = X.shape
-        # if h is None:
-        #     h0 = init.zeros(batch_size, self.hidden_size, device=self.device, dtype=self.dtype)
-        #     c0 = init.zeros(batch_size, self.hidden_size, device=self.device, dtype=self.dtype)
-        # else:
-        #     h0, c0 = h
-            
-        # if self.bias:
-        #     gate_gather = X @ self.W_ih + self.bias_ih.reshape((1, 4*self.hidden_size)).broadcast_to((batch_size, 4*self.hidden_size)) + \
-        #             h0 @ self.W_hh + self.bias_hh.reshape((1, 4*self.hidden_size)).broadcast_to((batch_size, 4*self.hidden_size))
-        # else:
-        #     gate_gather = X @ self.W_ih + h0 @ self.W_hh
-        # gates_split = tuple(ops.split(gate_gather, axis=1))
-        # gates = []
-        # for t in  range(4):
-        #     gates.append(ops.stack(gates_split[t * self.hidden_size : (t + 1) * self.hidden_size], axis=1))
-        
-        # i, f, g, o = gates
-        # i, f, g, o = Sigmoid()(i), Sigmoid()(f), ops.tanh(g), Sigmoid()(o)
-        
-        # c_out = f * c0 + i * g
-        # h_out = o * ops.tanh(c_out)
-        # return h_out, c_out
         batch_size, _ = X.shape
         if h is None:
             h0, c0 = init.zeros(batch_size, self.hidden_size, device=self.device, dtype=self.dtype), \
@@ -349,7 +313,6 @@ class Embedding(Module):
         self.device = device
         self.dtype = dtype
 
-        # self.weight = Parameter(init.rand(num_embeddings, embedding_dim, low=0, high=1, device=device, dtype=dtype, requires_grad=True))
         self.weight = Parameter(init.randn(
             num_embeddings,
             embedding_dim,
