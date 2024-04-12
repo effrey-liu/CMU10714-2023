@@ -70,7 +70,7 @@ class ResNet9(ndl.nn.Module):
 
 class LanguageModel(nn.Module):
     def __init__(self, embedding_size, output_size, hidden_size, num_layers=1,
-                 seq_model='rnn', device=None, dtype="float32"):
+                 seq_model='rnn', seq_len=20, device=None, dtype="float32"):
         """
         Consists of an embedding layer, a sequence model (either RNN or LSTM), and a
         linear layer.
@@ -91,6 +91,8 @@ class LanguageModel(nn.Module):
             self.seq_model = nn.RNN(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
         elif seq_model == 'lstm':
             self.seq_model = nn.LSTM(embedding_size, hidden_size, num_layers, device=device, dtype=dtype)
+        elif seq_model == 'transformer':
+            self.seq_model = nn.Transformer(embedding_size, hidden_size, num_layers, device=device, dtype=dtype, sequence_len = seq_len)
         else:
             raise ValueError('only have rnn and lstm models')
         self.linear = nn.Linear(hidden_size, output_size, device=device, dtype=dtype)

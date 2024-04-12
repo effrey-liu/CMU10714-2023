@@ -65,16 +65,20 @@ class Corpus(object):
         """
         ### BEGIN YOUR SOLUTION
         ids = []
-        self.dictionary.add_word('<eos>')
-        with open(path, 'r') as f:
-            if max_lines is None:
-                lines = f.readlines()[:max_lines]
+        eos_id = self.dictionary.add_word('<eos>')
+        def tokenize_one_line(line):
+            words = line.split()
+            for word in words:
+                ids.append(self.dictionary.add_word(word))
+            ids.append(eos_id)
+
+        with open(path, "r") as f:
+            if max_lines:
+                for _ in range(max_lines):
+                    tokenize_one_line(f.readline())
             else:
-                lines = f.readlines()
-            for line in lines:
-                words = line.split() + ['<eos>']
-                for word in words:
-                    ids.append(self.dictionary.add_word(word))
+                for line in f:
+                    tokenize_one_line(line)
         return ids
         ### END YOUR SOLUTION
 

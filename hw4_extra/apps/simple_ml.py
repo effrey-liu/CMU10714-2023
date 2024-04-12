@@ -261,11 +261,11 @@ def epoch_general_ptb(data, model, seq_len=40, loss_fn=nn.SoftmaxLoss(), opt=Non
     accs = []
     nbatch, batch_size = data.shape
     h = None
-    for i in range(0, data.shape[0] - 1, seq_len):
+    for i in range(0, nbatch - 1, seq_len):
         X, y = ndl.data.get_batch(data, i, seq_len, device=device, dtype=dtype)
 
         # out is of shape (seq_len * batch_size, output_size)
-        out, h = model(X, h)
+        out, h = model()(X, h)
         loss = loss_fn()(out, y)
         if opt is not None:
             opt.reset_grad()
